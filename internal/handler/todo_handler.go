@@ -49,6 +49,8 @@ func (h *TodoHandler) CreateTodo(c *gin.Context) {
 	}
 
 	h.usecase.Create(createTodoRequest.Description)
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Todo created successfully"})
 }
 
 func (h *TodoHandler) UpdateTodo(c *gin.Context) {
@@ -64,6 +66,8 @@ func (h *TodoHandler) UpdateTodo(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Todo updated successfully"})
 }
 
 func (h *TodoHandler) DeleteTodoByID(c *gin.Context) {
@@ -72,4 +76,6 @@ func (h *TodoHandler) DeleteTodoByID(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Todo deleted successfully"})
 }
