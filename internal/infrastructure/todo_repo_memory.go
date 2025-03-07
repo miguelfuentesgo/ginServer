@@ -1,54 +1,72 @@
 package infrastructure
 
 import (
+	"log"
 	"server/internal/domain"
 	"server/internal/repository"
+
+	"gorm.io/gorm"
 )
 
-type TodoRepoMemory struct {
-	todos []domain.Todo
+type TodoRepoDB struct {
+	db *gorm.DB
 }
 
-func NewTodoRepository() repository.TodoRepository {
-	return &TodoRepoMemory{
-		todos: []domain.Todo{},
+func NewTodoRepository(db *gorm.DB) repository.TodoRepository {
+	return &TodoRepoDB{
+		db: db,
 	}
 }
 
-func (memory *TodoRepoMemory) GetAll() ([]domain.Todo, error) {
-	return memory.todos, nil
-}
+func (todoDB *TodoRepoDB) GetAll() ([]domain.Todo, error) {
+	var todos []domain.Todo
+	err := todoDB.db.Find(&todos).Error
 
-func (memory *TodoRepoMemory) GetByID(id string) (domain.Todo, error) {
-	for _, todo := range memory.todos {
-		if todo.ID == id {
-			return todo, nil
-		}
+	if err != nil {
+		log.Fatal("Error getting all todos")
+		return nil, err
 	}
-	return domain.Todo{}, nil
+	return todos, nil
 }
 
-func (memory *TodoRepoMemory) Update(todo domain.Todo) error {
-	for i, t := range memory.todos {
-		if t.ID == todo.ID {
-			memory.todos[i] = todo
-			return nil
-		}
+func (todoDB *TodoRepoDB) GetByID(id string) (domain.Todo, error) {
+	var foundTodo domain.Todo
+	err := todoDB.db.First(&foundTodo, id).Error
+
+	if err != nil {
+		log.Fatal("Error getting todo by id")
+		return domain.Todo{}, err
+	}
+	return foundTodo, nil
+}
+
+func (todoDB *TodoRepoDB) Update(todo domain.Todo) error {
+	err := todoDB.db.Save(&todo).Error
+
+	if err != nil {
+		log.Fatal("Error updating todo")
+		return err
 	}
 	return nil
 }
 
-func (memory *TodoRepoMemory) Delete(id string) error {
-	for i, todo := range memory.todos {
-		if todo.ID == id {
-			memory.todos = append(memory.todos[:i], memory.todos[i+1:]...)
-			return nil
-		}
+func (todoDB *TodoRepoDB) Delete(id string) error {
+	err := todoDB.db.Delete(&domain.Todo{}, id).Error
+
+	if err != nil {
+		log.Fatal("Error deleting todo")
+		return err
 	}
 	return nil
 }
 
-func (memory *TodoRepoMemory) Create(todo domain.Todo) error {
-	memory.todos = append(memory.todos, todo)
+func (todoDB *TodoRepoDB) Create(todo domain.Todo) error {
+
+	err := todoDB.db.Create(&todo).Error
+
+	if err != nil {
+		log.Fatal("Error creating todo")
+		return err
+	}
 	return nil
 }
